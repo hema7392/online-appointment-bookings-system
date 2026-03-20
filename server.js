@@ -8,7 +8,6 @@ const appointmentRoutes = require('./routes/appointments');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 // Middleware - session MUST be before routes so req.session is populated
 app.use(express.urlencoded({ extended: true }));
@@ -55,6 +54,8 @@ app.get('/', (req, res) => {
 });
 
 // Start server
-app.listen(5000, () => {
-    console.log("Server started on http://localhost:5000");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log("Server started on port", PORT);
 });
