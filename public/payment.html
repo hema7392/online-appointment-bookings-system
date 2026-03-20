@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking System | Payment</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">BookingApp</a>
+        <div class="nav-links">
+            <button id="theme-toggle" onclick="toggleTheme()" style="padding: 0.5rem; border-radius: 50%; border: none; background: transparent; font-size: 1.2rem; cursor: pointer; color: white;" title="Toggle Dark Mode">🌙</button>
+            <a href="dashboard.html" class="btn btn-outline">Dashboard</a>
+            <button onclick="handleLogout()" class="btn btn-danger">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="form-container" style="max-width: 480px;">
+            <h2 style="margin-bottom: 0.5rem; text-align: center; color: var(--text);">Complete Payment</h2>
+            <p style="text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Enter your card details to confirm your booking</p>
+            <div id="alert-box" class="alert"></div>
+
+            <!-- Booking summary -->
+            <div id="booking-summary" style="background: var(--bg-color); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; border: 1px solid var(--text-muted); display: none;">
+                <p style="font-weight: 600; margin-bottom: 0.25rem; color: var(--text);">Booking Summary</p>
+                <p id="summary-service" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+                <p id="summary-datetime" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+            </div>
+
+            <form id="payment-form" onsubmit="handlePayment(event)">
+                <div class="form-group">
+                    <label>Cardholder Name</label>
+                    <input type="text" id="card-name" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Card Number</label>
+                    <input type="text" id="card-number" required placeholder="XXXX XXXX XXXX XXXX" maxlength="19"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').replace(/(.{4})/g, '$1 ').trim()">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <label>Expiry (MM/YY)</label>
+                        <input type="text" id="card-expiry" required placeholder="MM/YY" maxlength="5">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>CVV</label>
+                        <input type="text" id="card-cvv" required placeholder="123" maxlength="3"
+                            oninput="this.value = this.value.replace(/\D/g,'')">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.9rem; font-size: 1rem;" id="pay-btn">
+                    💳&nbsp; Pay Now & Confirm Booking
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        let pendingBooking = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+
+            // Load pending booking from sessionStorage
+            const raw = sessionStorage.getItem('pendingBooking');
+            if (!raw) {
+                alert('No booking found. Please select a service first.');
+                window.location.href = '/book.html';
+                return;
+            }
+
+            pendingBooking = JSON.parse(raw);
+
+            // Show booking summary
+            const summaryEl = document.getElementById('booking-summary');
+            summaryEl.style.display = 'block';
+            document.getElementById('summary-service').textContent = 'Service: ' + pendingBooking.service;
+            document.getElementById('summary-datetime').textContent = 'Date & Time: ' + pendingBooking.date + ' at ' + pendingBooking.time;
+        });
+
+        async function handlePayment(e) {
+            e.preventDefault();
+
+            const btn = document.getElementById('pay-btn');
+            const alertBox = document.getElementById('alert-box');
+
+            // Basic front-end validation
+            const cardNumber = document.getElementById('card-number').value.replace(/\s/g, '');
+            const expiry = document.getElementById('card-expiry').value;
+            const cvv = document.getElementById('card-cvv').value;
+
+            if (cardNumber.length !== 16) {
+                showAlert('Please enter a valid 16-digit card number.', 'error');
+                return;
+            }
+            if (!/^\d{2}\/\d{2}$/.test(expiry)) {
+                showAlert('Please enter expiry in MM/YY format.', 'error');
+                return;
+            }
+            if (cvv.length !== 3) {
+                showAlert('Please enter a valid 3-digit CVV.', 'error');
+                return;
+            }
+
+            // Simulate payment processing
+            btn.disabled = true;
+            btn.textContent = '⏳ Processing...';
+
+            setTimeout(async () => {
+                try {
+                    const payload = {
+                        service: pendingBooking.service,
+                        date: pendingBooking.date,
+                        time: pendingBooking.time
+                    };
+
+                    const res = await fetch('/api/appointments/confirm', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const data = await res.json();
+
+                    if (res.ok && data.success) {
+                        // Clear session storage
+                        sessionStorage.removeItem('pendingBooking');
+                        // Set flag to show email modal on dashboard
+                        sessionStorage.setItem('showEmailModal', 'true');
+
+                        showAlert('✅ Booking Confirmed Successfully! Redirecting...', 'success');
+
+                        setTimeout(() => {
+                            window.location.href = '/dashboard.html';
+                        }, 1500);
+                    } else {
+                        showAlert('Payment failed: ' + (data.message || 'Unknown error'), 'error');
+                        btn.disabled = false;
+                        btn.textContent = '💳 Pay Now & Confirm Booking';
+                    }
+                } catch (err) {
+                    console.error('Payment error:', err);
+                    showAlert('Payment failed. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.textContent = '💳 Pay Now & Confirm Booking';
+                }
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

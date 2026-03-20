@@ -1,0 +1,30 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking System | Home</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">BookingApp</a>
+        <div class="nav-links" id="nav-links">
+            <button id="theme-toggle" class="btn btn-outline" onclick="toggleTheme()" style="padding: 0.5rem; border-radius: 50%; border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center;" title="Toggle Dark Mode">🌙</button>
+            <a href="login.html" class="btn btn-outline" id="nav-login">Login / Sign Up</a>
+        </div>
+    </nav>
+
+    <div class="hero">
+        <h1>Welcome to BookingApp</h1>
+        <p>Your one-stop solution for scheduling appointments quickly and effortlessly.</p>
+        <a href="login.html" class="btn btn-primary" style="font-size: 1.1rem; padding: 0.75rem 2rem;">Get Started</a>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', checkAuthStatus);
+    </script>
+</body>
+</html>

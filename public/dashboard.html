@@ -1,0 +1,65 @@
+<!-- public/dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking System | Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">BookingApp</a>
+        <div class="nav-links">
+            <button id="theme-toggle" class="btn btn-outline" onclick="toggleTheme()" style="padding: 0.5rem; border-radius: 50%; border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center;" title="Toggle Dark Mode">🌙</button>
+            <span id="user-greeting">Hello, User</span>
+            <a href="book.html" class="btn btn-outline">Book Appointment</a>
+            <button onclick="handleLogout()" class="btn btn-danger">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 style="margin-bottom: 1.5rem; color: var(--text);">My Appointments</h2>
+        <div id="alert-box" class="alert"></div>
+        
+        <div class="dashboard-controls">
+            <input type="text" id="search-input" class="search-box" placeholder="Search appointments..." oninput="filterAppointments()">
+            <label class="filter-label">
+                Filter:
+                <select id="date-filter" class="filter-select" onchange="filterAppointments()" style="margin-left: 0.5rem;">
+                    <option value="all">All</option>
+                    <option value="today">Today</option>
+                    <option value="upcoming">Upcoming</option>
+                    <option value="past">Past</option>
+                </select>
+            </label>
+        </div>
+
+        <div id="appointments-grid" class="grid-container">
+            <!-- Appointments will be loaded here dynamically -->
+        </div>
+        
+        <div id="no-appointments" style="display: none; text-align: center; padding: 3rem; color: var(--text-muted);">
+            <h3>No appointments match your criteria.</h3>
+            <a href="book.html" class="btn btn-primary" style="margin-top: 1rem;">Book Now</a>
+        </div>
+    </div>
+
+    <!-- Email Confirmation Modal -->
+    <div id="email-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="check-icon">✓</div>
+            <h3 style="margin-bottom: 0.5rem;">Booking Confirmed!</h3>
+            <p style="color: var(--text-muted);">Appointment booked successfully. Confirmation email sent.</p>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+            loadAppointments();
+        });
+    </script>
+</body>
+</html>

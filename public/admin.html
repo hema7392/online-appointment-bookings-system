@@ -1,0 +1,172 @@
+<!-- public/admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Booking System | Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ─── Analytics Cards ─── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+        @media (max-width: 900px) {
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+
+        .stat-card {
+            border-radius: 12px;
+            padding: 1.5rem 1.25rem;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 28px rgba(0,0,0,0.2);
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -30px; right: -20px;
+            width: 90px; height: 90px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.12);
+        }
+
+        .stat-card.total    { background: linear-gradient(135deg, #4F46E5, #7C3AED); }
+        .stat-card.pending  { background: linear-gradient(135deg, #D97706, #F59E0B); }
+        .stat-card.approved { background: linear-gradient(135deg, #059669, #10B981); }
+        .stat-card.revenue  { background: linear-gradient(135deg, #DC2626, #F87171); }
+
+        .stat-icon {
+            font-size: 2.2rem;
+            flex-shrink: 0;
+        }
+        .stat-info p {
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.85;
+            margin-bottom: 0.2rem;
+        }
+        .stat-value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar" style="background: linear-gradient(135deg, #1F2937, #374151);">
+        <a href="/" class="logo">BookingApp Admin</a>
+        <div class="nav-links">
+            <button id="theme-toggle" class="btn btn-outline" onclick="toggleTheme()" style="padding: 0.5rem; border-radius: 50%; border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center;" title="Toggle Dark Mode">🌙</button>
+            <span style="color: #F3F4F6;">Admin Role</span>
+            <button onclick="handleLogout()" class="btn btn-danger">Logout</button>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <!-- ── Analytics Cards ── -->
+        <div class="stats-grid">
+            <div class="stat-card total">
+                <div class="stat-icon">📋</div>
+                <div class="stat-info">
+                    <p>Total Appointments</p>
+                    <div class="stat-value" id="stat-total">0</div>
+                </div>
+            </div>
+            <div class="stat-card pending">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-info">
+                    <p>Pending</p>
+                    <div class="stat-value" id="stat-pending">0</div>
+                </div>
+            </div>
+            <div class="stat-card approved">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <p>Approved</p>
+                    <div class="stat-value" id="stat-approved">0</div>
+                </div>
+            </div>
+            <div class="stat-card revenue">
+                <div class="stat-icon">💰</div>
+                <div class="stat-info">
+                    <p>Total Revenue</p>
+                    <div class="stat-value" id="stat-revenue">₹0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Appointments Section ── -->
+        <h2 style="margin-bottom: 1.5rem; color: var(--text);">All System Appointments</h2>
+        <div id="alert-box" class="alert"></div>
+
+        <div id="admin-appointments-grid" class="grid-container">
+            <!-- Admin appointments will be loaded here dynamically -->
+        </div>
+
+        <div id="no-appointments" style="display: none; text-align: center; padding: 3rem; color: #6B7280;">
+            <h3>No appointments found in the system.</h3>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+    <script>
+        // ── Counter animation utility ──
+        function animateCount(elementId, target, prefix = '', suffix = '') {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            const duration = 900;
+            const steps = 40;
+            const stepVal = target / steps;
+            let current = 0;
+            const interval = setInterval(() => {
+                current += stepVal;
+                if (current >= target) {
+                    current = target;
+                    clearInterval(interval);
+                }
+                el.textContent = prefix + Math.floor(current).toLocaleString() + suffix;
+            }, duration / steps);
+        }
+
+        async function loadAdminStats() {
+            try {
+                const res = await fetch('/api/admin/stats');
+                const data = await res.json();
+                if (data.success) {
+                    animateCount('stat-total',    data.total);
+                    animateCount('stat-pending',  data.pending);
+                    animateCount('stat-approved', data.approved);
+                    animateCount('stat-revenue',  data.revenue, '₹');
+                }
+            } catch (err) {
+                console.error('Failed to load admin stats', err);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+            loadAdminStats();
+            loadAdminAppointments();
+        });
+    </script>
+</body>
+</html>
